@@ -20,11 +20,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework import routers
-from oAuth.views import UserInfoViewSet, UserViewSet
+from oAuth.views import UserInfoViewSet, UserViewSet, BookViewSet
 
 router_V1 = routers.DefaultRouter()
 router_V1.register('info', UserInfoViewSet)
 router_V1.register('users', UserViewSet)
+router_V1.register('books', BookViewSet)
 
 urlpatterns = [
     path('api/', include(router_V1.urls)),

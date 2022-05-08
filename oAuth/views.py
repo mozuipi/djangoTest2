@@ -1,8 +1,9 @@
 from django.shortcuts import render
-from rest_framework import viewsets
-from oAuth.models import NewUser
+from rest_framework import viewsets, status
+from oAuth.models import NewUser, Books
 from rest_framework.response import Response
-from oAuth.serializers import UserSerializer
+from oAuth.serializers import UserSerializer, Bookerializer
+from django.db.models import Q
 
 # Create your views here.
 
@@ -21,11 +22,13 @@ class UserInfoViewSet(viewsets.ViewSet):
 
         return Response(user_info)
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = NewUser.objects.all()
-    serializer_class = UserSerializer
+class BookViewSet(viewsets.ModelViewSet):
+
+    queryset = Books.objects.all()
+    serializer_class = Bookerializer
 
     def list(self, request, *args, **kwargs):
+        # self.queryset = self.queryset.filter(~Q(is_delete=True))
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
@@ -35,3 +38,78 @@ class UserViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.is_delete = True
+        print('ok')
+        instance.save()
+        # instance.delete()
+
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = NewUser.objects.all()
+    serializer_class = UserSerializer
+
+    # list :get
+    # create: post
+    # put: update(整体更新，提供所有更改后的字段信息)
+    # patch：partial_update(据不更新，仅提供需要修改的信息)
+    # delete: destroy
+    # get_id: retrieve
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        if user.roles == 1:
+            self.queryset = self.queryset.filter(~Q(username='admin'))
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+

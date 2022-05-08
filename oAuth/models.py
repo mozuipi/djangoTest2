@@ -20,3 +20,9 @@ class NewUser(AbstractUser):
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
         pass
+
+class Books(models.Model):
+
+    name = models.CharField(verbose_name='书名', max_length=10)
+    auther = models.CharField(verbose_name='作者', max_length=10)
+    is_delete = models.BooleanField(verbose_name='是否删除', default=False)
