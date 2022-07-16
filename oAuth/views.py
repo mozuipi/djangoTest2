@@ -100,8 +100,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         user = request.user
-        if user.roles == 1:
-            self.queryset = self.queryset.filter(~Q(username='admin'))
+        # if 'roles' in user and user.roles == 1:
+        #         self.queryset = self.queryset.filter(~Q(username='admin'))
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
@@ -112,4 +112,34 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+class UserCreateViewSet(viewsets.ModelViewSet):
+    queryset = NewUser.objects.all()
+    serializer_class = UserSerializer
+    http_method_names = ['post', 'get']
+    permission_classes = []
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = NewUser.objects.get(code=kwargs['pk'])
+        instance.is_active = True
+        instance.save()
+        data = {
+            'status': 'success',
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_info = self.perform_create(serializer)
+        user_info.set_password(request.data['password'])
+        user_info.is_active = False
+        user_info.save()
+        code = user_info.code
+        url = request.build_absolute_uri("/api/user_activate/" + str(code) + "/")
+        # url = "http://localhost:8000/api/user_activate/" + str(code)
+        print(url)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        return serializer.save()

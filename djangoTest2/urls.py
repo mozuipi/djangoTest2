@@ -20,10 +20,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework import routers
-from oAuth.views import UserInfoViewSet, UserViewSet, BookViewSet
+from oAuth.views import UserInfoViewSet, UserViewSet, BookViewSet, UserCreateViewSet
 
 router_V1 = routers.DefaultRouter()
 router_V1.register('info', UserInfoViewSet)
+router_V1.register('user_activate', UserCreateViewSet)
+router_V1.register('user_create', UserCreateViewSet)
 router_V1.register('users', UserViewSet)
 router_V1.register('books', BookViewSet)
 
