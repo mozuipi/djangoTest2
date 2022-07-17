@@ -4,6 +4,8 @@ from oAuth.models import NewUser, Books
 from rest_framework.response import Response
 from oAuth.serializers import UserSerializer, Bookerializer
 from django.db.models import Q
+from djangoTest2.settings import BASE_URL
+from django.core.mail import send_mail
 
 # Create your views here.
 
@@ -135,9 +137,18 @@ class UserCreateViewSet(viewsets.ModelViewSet):
         user_info.is_active = False
         user_info.save()
         code = user_info.code
-        url = request.build_absolute_uri("/api/user_activate/" + str(code) + "/")
-        # url = "http://localhost:8000/api/user_activate/" + str(code)
+        # url = request.build_absolute_uri("/api/user_activate/" + str(code) + "/")
+        url = BASE_URL + "/#/user_activate?code=" + str(code)
         print(url)
+
+        send_mail(
+            '用户激活',
+            url,
+            'xtlyk@163.com',
+            [user_info.email],
+            fail_silently=False,
+        )
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
