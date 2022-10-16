@@ -17,7 +17,6 @@ class NewUser(AbstractUser):
     last_login = models.DateTimeField(_('last login'), blank=True, null=True, auto_now=True)
     code = models.UUIDField(verbose_name='uuid', default=uuid.uuid4, editable=False)
 
-
     objects = UserManager()
 
     class Meta(AbstractUser.Meta):
@@ -29,6 +28,9 @@ class Books(models.Model):
     name = models.CharField(verbose_name='书名', max_length=10)
     auther = models.CharField(verbose_name='作者', max_length=10)
     is_delete = models.BooleanField(verbose_name='是否删除', default=False)
+
+    def __str__(self):
+        return str(self.id) + '--' + self.name + '--' + self.auther
 
     class Meta:
         verbose_name_plural = '图书'

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext, gettext_lazy as _
-from oAuth.models import NewUser, Student, StudentInfo, ClassName, Teacher
+from oAuth.models import NewUser, Student, StudentInfo, ClassName, Teacher, Books
 
 # Register your models here.
 
@@ -43,3 +43,9 @@ class TeacherAdmin(admin.ModelAdmin):
     list_display_links = ('id', 'name')
 
 admin.site.register(Teacher, TeacherAdmin)
+
+class BooksAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'auther', 'is_delete')
+    list_display_links = ('id', 'name', 'auther', 'is_delete')
+
+admin.site.register(Books, BooksAdmin)

@@ -6,8 +6,15 @@ from oAuth.serializers import UserSerializer, Bookerializer
 from django.db.models import Q
 from djangoTest2.settings import BASE_URL
 from django.core.mail import send_mail
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
 
 # Create your views here.
+
+class NewPageNumberPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class UserInfoViewSet(viewsets.ViewSet):
     queryset = NewUser.objects.all().order_by('-date_joined')
@@ -28,6 +35,9 @@ class BookViewSet(viewsets.ModelViewSet):
 
     queryset = Books.objects.all()
     serializer_class = Bookerializer
+    pagination_class = NewPageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'auther']
 
     def list(self, request, *args, **kwargs):
         # self.queryset = self.queryset.filter(~Q(is_delete=True))
